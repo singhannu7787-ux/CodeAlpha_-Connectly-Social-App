@@ -1,1 +1,26 @@
-{% extends 'social/base.html' %}{% block content %}<h2>Feed</h2><form method='POST'>{% csrf_token %}<textarea name='content'></textarea><button type='submit'>Post</button></form>{% for post in posts %}<div class='post'><b>{{ post.author }}</b>: {{ post.content }}<br><a href='/post/{{ post.id }}/'>Comments</a></div>{% endfor %}{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<h2>Home Feed</h2>
+
+{% for post in posts %}
+<div class="post">
+    <strong>@{{ post.user.username }}</strong>
+    <p class="caption">{{ post.caption }}</p>
+
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="Post image">
+    {% endif %}
+
+    <form action="{% url 'like_post' post.id %}" method="POST">
+        {% csrf_token %}
+        <button class="like-btn" type="submit">
+            ❤️ {{ post.total_likes }} Likes
+        </button>
+    </form>
+
+    <p>Posted on {{ post.created_at|date:"M d, Y H:i" }}</p>
+</div>
+{% empty %}
+<p>No posts yet. Create one!</p>
+{% endfor %}
+{% endblock %}
