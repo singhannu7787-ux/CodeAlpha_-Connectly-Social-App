@@ -1,1 +1,18 @@
-{% extends 'social/base.html' %}{% block content %}<h2>Register</h2><form method='POST'>{% csrf_token %}{{ form.as_p }}<button type='submit'>Register</button></form>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-container">
+    <h2>Register</h2>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="password" name="confirm" placeholder="Confirm Password" required>
+        <input type="submit" value="Register">
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+</div>
+{% endblock %}
