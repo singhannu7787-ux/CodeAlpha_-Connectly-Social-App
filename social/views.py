@@ -1,54 +1,95 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from .models import Post, Comment
+from .models import Post, Comment, Profile
+from django.db.models import Q
 
+# -----------------------------------------------------------
+# User Registration
+# -----------------------------------------------------------
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        confirm = request.POST['confirm']
+
+        if password == confirm:
+            if User.objects.filter(username=username).exists():
+                return render(request, 'register.html', {'error': 'Username already taken'})
+            user = User.objects.create_user(username=username, email=email, password=password)
+            Profile.objects.create(user=user)
             login(request, user)
-            return redirect('/')
-    else:
-        form = UserCreationForm()
-    return render(request, 'social/register.html', {'form': form})
+            return redirect('home')
+        else:
+            return render(request, 'register.html', {'error': 'Passwords do not match'})
+    return render(request, 'register.html')
 
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('/')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'social/login.html', {'form': form})
-
-def logout_view(request):
-    logout(request)
-    return redirect('/login/')
-
+# -----------------------------------------------------------
+# Home Page / Feed
+# -----------------------------------------------------------
 @login_required
 def home(request):
     posts = Post.objects.all().order_by('-created_at')
-    return render(request, 'social/home.html', {'posts': posts})
+    return render(request, 'home.html', {'posts': posts})
 
+# -----------------------------------------------------------
+# Create Post
+# -----------------------------------------------------------
 @login_required
 def create_post(request):
     if request.method == 'POST':
-        content = request.POST.get('content')
-        Post.objects.create(author=request.user, content=content)
-        return redirect('/')
-    return render(request, 'social/create_post.html')
+        caption = request.POST.get('caption')
+        image = request.FILES.get('image')
+        Post.objects.create(user=request.user, caption=caption, image=image)
+        return redirect('home')
+    return render(request, 'create_post.html')
 
+# -----------------------------------------------------------
+# Like Post
+# -----------------------------------------------------------
 @login_required
-def post_detail(request, pk):
-    post = get_object_or_404(Post, id=pk)
-    comments = Comment.objects.filter(post=post)
-    if request.method == 'POST':
-        text = request.POST.get('text')
-        Comment.objects.create(post=post, user=request.user, text=text)
-        return redirect('post_detail', pk=pk)
-    return render(request, 'social/post_detail.html', {'post': post, 'comments': comments})
+def like_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+    else:
+        post.likes.add(request.user)
+    return redirect('home')
+
+# -----------------------------------------------------------
+# Follow User
+# -----------------------------------------------------------
+@login_required
+def follow_user(request, username):
+    user_to_follow = get_object_or_404(User, username=username)
+    profile = user_to_follow.profile
+
+    if request.user in profile.followers.all():
+        profile.followers.remove(request.user)
+    else:
+        profile.followers.add(request.user)
+    return redirect('profile', username=username)
+
+# -----------------------------------------------------------
+# View Profile
+# -----------------------------------------------------------
+@login_required
+def profile(request, username):
+    user_profile = get_object_or_404(User, username=username)
+    posts = Post.objects.filter(user=user_profile)
+    followers_count = user_profile.profile.followers.count()
+    following_count = user_profile.following.count()
+    is_following = False
+    if request.user in user_profile.profile.followers.all():
+        is_following = True
+
+    context = {
+        'user_profile': user_profile,
+        'posts': posts,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'is_following': is_following,
+    }
+    return render(request, 'profile.html', context)
