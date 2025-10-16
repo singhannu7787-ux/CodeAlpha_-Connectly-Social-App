@@ -1,1 +1,10 @@
-{% extends 'social/base.html' %}{% block content %}<h2>New Post</h2><form method='POST'>{% csrf_token %}<textarea name='content'></textarea><button type='submit'>Post</button></form>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<h2>Create a Post</h2>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <textarea name="caption" placeholder="Write a caption..." required></textarea>
+    <input type="file" name="image">
+    <input type="submit" value="Post">
+</form>
+{% endblock %}
