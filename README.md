@@ -1,1 +1,1 @@
-# CodeAlpha_-Connectly-Social-App
+# Connectly — Mini Social Media App\n\nBuilt with Django. Features: register, login, posts, comments.\n\n## Setup\n1. `pip install django`\n2. `python manage.py migrate`\n3. `python manage.py runserver`

@@ -1,0 +1,1 @@
+<!DOCTYPE html><html><head><title>Connectly</title><link rel='stylesheet' href='/static/social/style.css'></head><body><nav><a href='/'>Home</a> | <a href='/create/'>New Post</a> | {% if user.is_authenticated %}<a href='/logout/'>Logout</a>{% else %}<a href='/login/'>Login</a> | <a href='/register/'>Register</a>{% endif %}</nav><hr>{% block content %}{% endblock %}</body></html>
