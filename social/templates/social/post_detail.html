@@ -1,1 +1,0 @@
-{% extends 'social/base.html' %}{% block content %}<h2>{{ post.author }}</h2><p>{{ post.content }}</p><hr>{% for c in comments %}<p><b>{{ c.user }}</b>: {{ c.text }}</p>{% endfor %}<form method='POST'>{% csrf_token %}<textarea name='text'></textarea><button type='submit'>Comment</button></form>{% endblock %}
